@@ -4,7 +4,7 @@ Advanced Methods In Data Science
 
 It cover pratice and applications of model topics including:
 
-Causality
+<h2>Causality</h2>
 What is cause
 there is always three explanations: X causes Y; Y causes X; and Z causes both X and Y.
 Need for additional information: pure ``data’’ cannot distinguish between these explanations
