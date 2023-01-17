@@ -1,0 +1,82 @@
+---
+title: "Lab01-ba-cs"
+author: "Xiaobing Xu"
+date: "4/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+## 1 Was Montana Meth Prevention Project Effective?
+
+## Load data 
+
+```{r}
+data1 <- read.delim("../Data/all-data/yrbs.tsv.bz2")
+data1 %>%
+  head()
+```
+1.2
+The treatment is tvcom, the outcome is meth use
+
+```{r}
+data1 <- data1 %>%
+  mutate(after = (year >= 2006) + 0)
+data1 %>%
+  head()
+```
+
+1.3
+```{r}
+result <- data1 %>%
+  filter(year >= 2006) %>%
+  group_by(state) %>%
+  summarize(mean(meth))
+result
+result[1,2] - result[2,2]
+```
+
+1.4
+We only need post-project data because we are analyzing whether this project had effect on children.
+
+```{r}
+lm(meth ~ state, data=data1, subset = (after == 1)) %>%
+  summary()
+```
+1.6
+In this approach, we can easily identify through means that the average meth use for Montana is less than the national level by **0.00181**. A t value of 0.592 shows that *state* is not very significant. Montana has a lower estimate of meth usage than National by **0.00181**, very similar to the first approach. 
+
+
+1.7
+The assumption is that explained and explanatory variables dealing with the same single period of point in time.
+
+2.1
+```{r}
+result2 <- data1 %>%
+  filter(state == 'MT') %>%
+  group_by(after) %>%
+  summarize(mean(meth))
+result2
+```
+2.2
+```{r}
+yrbs2 <- data1 %>%
+  filter(state == 'MT')
+lm(meth ~ I(year >= 2006), data=yrbs2) %>%
+  summary()
+```
+
+2.3
+It is statistically significant since p-value is too small, which is smaller than 0.01 and 0.05.  A t value of 8.225 shows that this is very significant. After the program has a lower estimate of meth usage than before the program by **0.038619**. We see similarly that after the program has a lower estimate than before by **0.038590**, and another significant variable is age, with a t value of 4.953.
+
+2.4
+It deadling with different period of time based on one point.
+
+2.5
+I believe the second approach is more convincing since the second approach gives us more insight to how significant the *before* variable is.

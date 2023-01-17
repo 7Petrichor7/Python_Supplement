@@ -1,0 +1,62 @@
+---
+title: "lab02"
+author: "Xiaobing Xu"
+date: "4/14/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+```
+
+```{r}
+yrbs <- read.delim("../Data/all-data/yrbs.tsv.bz2")
+yrbs %>%
+  head()
+```
+##### Identifying Assumptions
+1.The assumption for DID combines both the cross-sectional and before-after estimators, which compares treated-nontreated differences before and after the treatment. In other words, we will test both the treated group and non treated group of before and after the campagin in meth use. 
+
+2. I think it might plausible since there is difference and gap for the treated and non treated group before and after the compaign.
+
+```{r}
+yrbs$T <- yrbs$year < 2006
+head(yrbs)
+```
+
+```{r}
+yrbs <- yrbs %>%
+  rename(A = state)
+head(yrbs)
+```
+
+```{r}
+table <- yrbs %>% 
+  group_by(A, T) %>%
+  summarize(avg_meth_use = mean(meth))
+kable(table)
+```
+
+##### 2.3 Run a regression with full controls
+
+```{r}
+did_r <- lm(meth ~ A * T, data = yrbs)
+summary(did_r)
+```
+
+##### 2.4 Run a regression with full controls
+
+```{r}
+yrbs$before <- yrbs$year < 2006
+did_r2 <- lm(meth ~ A * T * age * sex * tv, data = yrbs)
+summary(did_r2)
+```
+
+The results shows a great significance in meth usage since the p-value is less than 0.05 which is statistically significant for the treatment group and after the treatment variables when they crossed. Meanwhile, I consider this number credible which corresponds with my identifying assumption which is plausible too. The treated and non-treated groups shows difference before and after the campaign.
+
+
+
+

@@ -1,0 +1,195 @@
+---
+title: "ps01"
+author: "Xiaobing Xu"
+date: "4/10/2022"
+output: html_document
+---
+
+##### use one late day
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+```
+
+
+##### 1.1
+```{r}
+data <- read.delim("../Data/all-data/progresa-sample.csv.bz2", sep=",")
+head(data)
+```
+cases 
+```{r}
+length((data$folnum))
+```
+
+Number of different villages
+```{r}
+test <- data %>%
+  count(village)
+head(test)
+```
+
+```{r}
+length(unique(data$village))
+```
+
+cases of poor in progresa villages
+```{r}
+data2 <- data %>% 
+  filter(data$progresa=='basal' & data$poor=='pobre') 
+length(data2$poor)
+```
+
+##### 1.2 
+average schooling rate of poor household in progresa and nonprogresa villages for 1997
+```{r}
+schooling_1997 <- data %>% 
+  filter(data$poor == 'pobre', data$year =='97') %>% 
+  group_by(village) %>% 
+  mutate(schooling = mean(sc, na.rm=TRUE))
+schooling_1997
+```
+
+average schooling rate of poor household in progresa and nonprogresa villages for 1998
+```{r}
+schooling_1998 <- data %>% 
+  filter(data$poor =="pobre",data$year =="98") %>% 
+  group_by(village) %>% 
+  mutate(schooling = mean(sc, na.rm = TRUE))
+schooling_1998
+```
+##### 1.3
+```{r}
+mean(schooling_1997$schooling)
+```
+
+```{r}
+sc_97_village <- data %>% 
+  filter(poor == "pobre") %>% 
+  filter(year == 97) %>% 
+  group_by(village, progresa) %>% 
+  summarize(schooling = mean(na.omit(sc)))
+
+sc_97 <- sc_97_village %>% 
+  group_by(progresa) %>% 
+  summarize(sc = mean(na.omit(schooling)))
+
+plt <- ggplot(sc_97_village, aes(x=schooling, fill=progresa, color=progresa)) +
+  geom_density(alpha=0.4) +
+  geom_vline(data=sc_97, aes(xintercept=sc, col=progresa)) + 
+  ggtitle("Schooling rate 1997 in progresa/non-progresa villages")
+
+plt
+```
+
+
+##### 1.4
+```{r}
+sc_98_village <- data %>% 
+  filter(poor == "pobre") %>% 
+  filter(year == 98) %>% 
+  group_by(village, progresa) %>% 
+  summarize(schooling = mean(na.omit(sc)))
+
+sc_98 <- sc_98_village %>% 
+  group_by(progresa) %>% 
+  summarize(sc = mean(na.omit(schooling)))
+
+plt <- ggplot(sc_98_village, aes(x=schooling, fill=progresa, color=progresa)) +
+  geom_density(alpha=0.4) +
+  geom_vline(data=sc_98, aes(xintercept=sc, col=progresa)) + 
+  ggtitle("Schooling rate 1998 in progresa/non-progresa villages")
+
+plt
+```
+##### 1.5 
+The distributions of schooling rate in 1997 and 1998 look different. The schooling rate in progresa viilage increase over the control village. The average schooling rate mean in 1997 is `r mean(schooling_1997$schooling)` and in 1998 is`r mean(schooling_1998$schooling)`, which has 0.011 difference. Alougth this amount is small, the average schooling rate did increase after the Progresa treament.
+
+##### 2.1.1
+We assume that the treated value is unrelated to the non-treated controls(poor in progresa villages v.s. non-progresa villages) after the treatment. In other words, we are assuming that there is no systematic difference in meth use between poor in progresa villages and non-progresa villages. With this assumption, now the only difference between the two state values is whether or not they are treated with progresa. Therefore, the difference in average meth use canbe viewed as caused by the progresa.
+
+##### 2.1.2
+The reason for looking at only poor households and only year 1998 is because the progresa should apply for families who considered as poor and we want to know the effect of progresa on schooling by comparing the before treatment (in 1997) and after treatment(1998).
+
+##### 2.1.3
+```{r}
+treated <- schooling_1998 %>% filter(progresa == 'basal')
+untreated <- schooling_1998 %>% filter(progresa == '0')
+treated_mean <- mean(treated$sc, na.rm=TRUE)
+untreated_mean <- mean(untreated$sc, na.rm=T)
+treated_mean - untreated_mean
+```
+Average schooling rate in treated villages: `r treated_mean`
+Average schooling rate in untreated villages: `r treated_mean`
+After having the treatment, the average schooling rate increased by **`r treated_mean - untreated_mean`**.
+
+##### 2.1.4
+```{r}
+ttest <- t.test(treated$sc, untreated$sc)
+ttest
+```
+
+The progresa was effective which increased schooling rate by 3.88% of average schooling rate. We can conclude that the program is significant in average enrollment rate because we have a **p-value of `r ttest['p.value']`**, which is less than 0.05.
+
+##### 2.1.5
+```{r}
+cs_linear_r <- lm(sc ~ progresa, data = schooling_1998)
+summary(cs_linear_r)
+```
+##### 2.1.6
+The linear regression result of average schooling of 1998 is 0.038842 which has the same value with 0.388
+
+##### 2.1.7
+The effect is statistically significant since the p-value is smaller than 0.05.
+
+##### 2.2.1
+We assume that the treatment before(1997) is unrelated to the the treatment after(1998) we considered – whether it is before or after the treatment. In other words, we are assuming that there is no temporal difference (before and after the treatment) in meth use in schooling. With this assumption, now the only factor we introduced is the treatment itself. Therefore, the difference in average meth use before and after the treatment can be viewed as caused by the treatment.
+
+##### 2.2.2
+The reason we only select progresa village and poor for this task is because the progresa is only applied for the poor and we need to compare the effect of porgresa from the time before having the treatment in 1997 to the time after having the treatment in 1998.
+
+##### 2.2.3
+```{r}
+treated_before <- schooling_1997 %>% filter(progresa == 'basal')
+treated_before_mean <- mean(treated_before$sc, na.rm=TRUE)
+treated_after <- schooling_1998 %>% filter(progresa == 'basal')
+treated_after_mean <- mean(treated_after$sc, na.rm=TRUE)
+treated_after_mean - treated_before_mean
+```
+
+##### 2.2.4 
+Based on the effect, we cannot conclude with any claims that the progresa's effectiveness. 
+
+##### 2.2.5
+```{r}
+ba_data <- data %>% 
+  mutate(after = year > 97) %>% 
+  filter(poor == "pobre") %>% 
+  filter(progresa == "basal")
+
+summary(lm(sc ~ after, data=ba_data))
+```
+
+##### 2.2.6 
+The result from linear regression is 0.023782 which has the same number with previous one, 2.38% (0.0238)
+
+##### 2.2.7 
+The result is statistically significant with a p-value of 1.298e-09, which is smaller than 0.05.
+
+##### 2.2.8 
+
+```{r}
+summary(lm(sc ~ dist_sec + year + hohedu + hohsex + fam_n + sex, data=ba_data))
+```
+
+##### 2.2.9
+The covariates does not change the effect of progresa. 
+
+##### 2.2.10
+I think neither CS or BA model are convincing, since other factors might have systematic differences between progresa and non-progresa villages. Besides from the progresa, the schooling rate will be influenced by the third variable.
+
+##### 3
+About 10 hours

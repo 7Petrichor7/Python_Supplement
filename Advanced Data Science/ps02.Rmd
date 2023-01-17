@@ -1,0 +1,165 @@
+---
+title: "ps02"
+author: "Xiaobing Xu"
+date: "4/16/2022"
+output: html_document
+---
+``use one late day for this submission``
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+```
+
+##### Load Data
+
+```{r}
+data <- read.delim("../Data/all-data/progresa-sample.csv.bz2", sep=",")
+head(data)
+```
+
+##### 1.1
+```{r}
+data2 <- data %>%
+  filter(data$poor=='pobre', data$year =='97') %>%
+  subset(select = -c(village,folnum, year, poor) )
+```
+
+```{r}
+df <- NULL 
+  T <- filter(data2, progresa == "basal")
+  C <- filter(data2, progresa =="0")
+  useful_variables <- c("sex", 
+                        "indig",
+                        "dist_sec",
+                        "sc",
+                        "grc",
+                        "fam_n",
+                        "dist_cap",
+                        "hohedu",
+                        "hohwag",
+                        "welfare_index",
+                        "hohsex",
+                        "hohage",
+                        "age",
+                        "sc97")
+for (i in useful_variables) {
+  #cat(i, "\n")
+  Averages_T <- mean(na.omit(T[[i]]))
+  Averages_C <- mean(na.omit(C[[i]]))
+  Difference_T_C <- Averages_T - Averages_C
+  ttest <- t.test(T[i],C[i])
+  newDF <- data.frame("Variable name"= i, 
+                      "Average (T)" = Averages_T, 
+                      "Averages (C)" = Averages_C, 
+                      "Difference (T-C)" = Difference_T_C, 
+                      "p-value" = ttest$p.value, 
+                      check.names = FALSE)
+  df <- rbind(df, newDF)
+}
+df
+```
+##### 1.2
+```{r}
+for (i in 1:nrow(df)) {
+  if (df[i,]$`p-value` <= 0.05)
+    print(df[i,]$`Variable name`)
+}
+```
+According to the p-values, the differences between treatment and control villages for the above variables are 95% statistically significant.
+
+##### 1.3
+We want to measure whether having progresa program will have a causal impact on the enrollmemt rates of poor householdes in Mexico or not and whether randomization was correctly conducted. However, In 1997, the Intervention–subsidies for poor households in treatment villages was not introduced, and we can know if there is another factor influence the enrollment rates of poor households.
+
+##### 1.4
+If treatment and control villages differ, we will know there were other factors (such as confounding variables) influence the enrollment rates of poor households or we did not perform randomization really well. In other words, we cannot tell valid tell the difference of having of treatment due to the impact of progresa program.
+
+##### 2.1
+```{r}
+treated_97 <- data %>% filter(data$year=="97" & data$progresa =="basal" & data$poor=="pobre")
+treated_98 <- data %>% filter(data$year=="98" & data$progresa =="basal" & data$poor=="pobre")
+control_97 <- data %>% filter(data$year=="97" & data$progresa =="0" & data$poor=="pobre")
+control_98 <- data %>% filter(data$year=="98" & data$progresa =="0" & data$poor=="pobre")
+mean_97_treatment <- mean(treated_97$sc, na.rm=TRUE)
+mean_98_treatment <- mean(treated_98$sc, na.rm=TRUE)
+mean_97_control <- mean(control_97$sc, na.rm=TRUE)
+mean_98_control <- mean(control_98$sc, na.rm=TRUE)
+
+difference_treatment <- (mean_98_treatment-mean_97_treatment)
+difference_control <- (mean_98_control-mean_97_control)
+diff_both <- (mean_98_treatment-mean_98_control) - (mean_97_treatment-mean_97_control)
+diff_both
+```
+
+##### 2.2 
+```{r}
+data2 <- data %>% 
+  filter(poor == "pobre") %>% 
+  mutate(A = (year == 98) + 0) %>% 
+  mutate(T = (progresa=="basal") + 0)
+simple_regression <- lm(sc~T*A, data = data2)
+summary(simple_regression)
+```
+
+##### 2.3
+Before the treatment, the schooling rate of controlled villages is 81.5%, and treated villages is (0.815186 + 0.007511) 82.27%. After having the progresa treatment in 1998, the schooling rate of controlled villages is (0.815186 - 0.007549) 80.76%, and treated villages is (0.815186 + 0.007511 - 0.007549 + 0.031331) 84.65%.
+
+##### 2.4
+The average enrollment rates between 1997 and 1998 increased by 3.1% since the progresabasal:year coefficient is 0.0307. The progresa (basal), the treatment group, is statistically significant, since its p-value is less than 2.2e-16 which is less than 0.05.
+
+##### 2.5
+```{r}
+multi_regression <- lm(sc ~ T * A  + age + sex + dist_sec + hohedu + welfare_index, data=data2)
+summary(multi_regression)
+```
+
+##### 2.6
+The result for multiple-regression version is 0.03095, which is similar to the 0.03133 that we got from the simple regression. The p-value for multiple-regression is small enough to be statistically significant.
+
+##### 2.7 CI
+```{r}
+confint(multi_regression)
+```
+The 95% confidence interval is from 0.02010 to 0.04178. For the previous PS, the uncontrolled estimates from CS is 0.038842, from BA is 0.023782, from DID is 0.031331 The all-controlled estimates from CS is 0.03205, from BA is 0.05739, from DID is 0.03095. For both uncontrolled and all-controlled estimates from CS and DID, and the uncontrolled BA estimates are encompassed in this confidence interval.
+
+##### 2.8
+The assumption for DID compares treated-untreated differences before and after the treatment and the treatment group and untreatment group should have the similar trending before having any treatment. In other words, we will test both treated group and non-treated group of before and after having the treatment of Progersa program and the trend of schooling rate for progresa villages should be similar to that for non-progresa villages. Thus, we can use data to predict some trends from non-collecting data which needs convincing assumption.
+
+##### 2.9
+In my opinion, none of the are convincing, because we conclude that we did not perform well randomization for some variables which leaded different trending before having the treatment and did not match the assumption of DID. From the last ps, we know that for both CS and BA estimator are not convincing because CS and BA identifying assumptions both are not met. There might also other factors which influence the schooling rate in 1998 other than progresa treatment.
+
+##### 2.10
+Based on the testing and analysis done in this report, I would conclude that Progresa was effective in increasing school enrollment rates if the assumption is true. Based on the t-tests and regression models, we can reject the null hypothesis that there is no difference in the average enrollment rate between controlled and treated villages since the p-value for these tests were below 0.05. This indicates that the difference in average enrollment rates was statistically significant and thus concluding that Progresa had a causal impact and the schooling rate in treated villages by 2.0101 to 4.178 percentage points. However, if the assumption is not true, thre might other factors other than Progresa treatment, increasing the schooling rate.
+
+##### 3.2
+In this paper, the authors talked about the university counties with remote instructions, and the university counties with in-person instruction, and the nonnuniversity counties. In a summary, there are 22 university counties with remote instruction, 79 university counties with in-person instruction, and 3,009 nonnuniversity counties.
+
+##### 3.3
+They were looking at the time from the start of classes through day 21 with the 21 days before classes began in fall 2020.
+
+##### 3.4
+The treatment is the remote instruction for large colleges or universities, and the control group will be in-person instruction.
+
+##### 3.5
+The main outcome measure the authors discussed would be the county COVID-19 incidence.
+In this article, the auther mentioned about SARS-CoV-2 reverse transcription–polymerase chainreaction (RT-PCR) testing to test positivity of COVID-19 for about testing rates per 100,000 population.
+
+##### 3.6
+This is because the percentage positive results reflects the trend of having and spreading COVID-19 incidence.
+
+##### 3.7
+```{r}
+T_diff <- 14.7 - 17.9
+C_diff <- 23.9 - 15.3
+C_diff - T_diff
+```
+
+
+##### 3.8
+In this study,the identifying assumption is DID method, which the treatment group and non-treatment group should have the similar trending without any treatment, which compares treated-untreated differences before and after the treatment and the treatment group. Thus, the trend of Covid-19 impact for university counties having remote instructions should have similar trend with in-person instructions. From the graph, we can know there are similar trends for both before and after treatment, which means that university counties in remote instructions has similar trend with in person instructions style. The graph result is matching with DID assumption, so the assumption is credible.
+
+
+I spent over 12 hours on this ps.
+
