@@ -5,12 +5,12 @@ Advanced Methods In Data Science
 It cover pratice and applications of model topics including:
 
 <h2>Causality</h2>
-What is cause
-there is always three explanations: X causes Y; Y causes X; and Z causes both X and Y.
-Need for additional information: pure ``data’’ cannot distinguish between these explanations
-Refresh R, dplyr, ggplot, rmarkdown
+  What is cause
+  there is always three explanations: X causes Y; Y causes X; and Z causes both X and Y.
+  Need for additional information: pure ``data’’ cannot distinguish between these explanations
+  Refresh R, dplyr, ggplot, rmarkdown
 
-Causality in linear regression framework
+<h2>Causality in linear regression framework</h2> 
   Before-after, cross-sectional estimators
     What is cause
     there is always three explanations: X causes Y; Y causes X; and Z causes both X and Y.
@@ -19,13 +19,13 @@ Causality in linear regression framework
   Linear regression: interaction terms
   
   
-Differences-in-differences
+<h2>Differences-in-differences</h2>  
   Differences-in-differences method
   Matrices and matrix multiplication
     Matrices and vectors, extremely important data structures in statistical modeling
     Matrix product
     
-Matrices, clustering
+<h2>Matrices, clustering</h2>  
   K-NN, similarity and metric distance
   Clusters
     Supervised and unsupervised learning
@@ -33,7 +33,7 @@ Matrices, clustering
     k-means clustering
     Hierarchical clustering
 
-Principal components, text
+<h2>Principal components, text</h2>  
   Principal Component analysis
     Dimensionality reduction
     Principal components
@@ -44,7 +44,7 @@ Principal components, text
     Document-term matrix (DTM)
     Use DTM for machine learning
 
-Naive Bayes
+<h2>Naive Bayes</h2>  
   Bayes Theorem
     Bayes theorem and conditional probability
     Predicting using Bayes theorem
@@ -53,7 +53,7 @@ Naive Bayes
     Naive Bayes
     smoothing to handle rare cases
 
-Trees and forests
+<h2>Trees and forests</h2>  
   Trees
     regression and classification trees
     how to decide optimal splits
@@ -61,7 +61,7 @@ Trees and forests
   Forests: ensemble methods
     ensemble methods: bagging, boosting, random forests
 
-Neural networks
+<h2>Neural networks</h2>  
   biological origin of neural networks
   feed-forward neural networks (perceptrons)
   the role of hidden layers
