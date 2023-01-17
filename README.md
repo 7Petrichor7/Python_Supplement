@@ -5,11 +5,11 @@ Advanced Methods In Data Science
 It cover pratice and applications of model topics including:
 
 <h2>Causality</h2>
-  What is cause
-  there is always three explanations: X causes Y; Y causes X; and Z causes both X and Y.
-  Need for additional information: pure ``data’’ cannot distinguish between these explanations
-  Refresh R, dplyr, ggplot, rmarkdown
-
+<p>What is cause<br>
+there is always three explanations: X causes Y; Y causes X; and Z causes both X and Y.<br>
+  Need for additional information: pure ``data’’ cannot distinguish between these explanations <br>
+  Refresh R, dplyr, ggplot, rmarkdown</p>
+  
 <h2>Causality in linear regression framework</h2> 
   Before-after, cross-sectional estimators
     What is cause
